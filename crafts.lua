@@ -53,17 +53,6 @@ minetest.register_tool("mobs:lasso", {
 	groups = {flammable = 2}
 })
 
-if minetest.get_modpath("farming") then
-	minetest.register_craft({
-		output = "mobs:lasso",
-		recipe = {
-			{"farming:string", "", "farming:string"},
-			{"", "default:diamond", ""},
-			{"farming:string", "", "farming:string"}
-		}
-	})
-end
-
 minetest.register_alias("mobs:magic_lasso", "mobs:lasso")
 
 -- net
@@ -104,15 +93,6 @@ minetest.register_craftitem("mobs:protector", {
 	description = S("Mob Protection Rune"),
 	inventory_image = "mobs_protector.png",
 	groups = {flammable = 2}
-})
-
-minetest.register_craft({
-	output = "mobs:protector",
-	recipe = {
-		{"default:stone", "default:stone", "default:stone"},
-		{"default:stone", "default:goldblock", "default:stone"},
-		{"default:stone", "default:stone", "default:stone"}
-	}
 })
 
 -- saddle
