@@ -119,7 +119,6 @@ local mob_class = {
 	tamed = false,
 	pause_timer = 0,
 	horny = false,
-	hornytimer = 0,
 	child = false,
 	gotten = false,
 	health = 0,
@@ -142,7 +141,11 @@ local mob_class = {
 	attack_players = true,
 	attack_npcs = true,
 	facing_fence = false,
-	_cmi_is_mob = true
+	_cmi_is_mob = true,
+        creation_time = nil,
+        next_breed_time = nil,
+	growup_duration = 240,
+	breed_duration = 240
 }
 
 local mob_class_meta = {__index = mob_class}
@@ -1138,60 +1141,55 @@ function mob_class:follow_holding(clicker)
 	return false
 end
 
+function mob_class:grow_up()
+   -- child takes 240 seconds before growing into adult
+   if not self.child then
+      return
+   end
+
+   local timestamp = os.time(os.date("!*t"))
+
+   if (timestamp - self.creation_time) > self.growup_duration then
+
+      self.child = false
+      self.next_breed_time = timestamp + self.breed_duration
+
+      self.object:set_properties({
+            textures = self.base_texture,
+            mesh = self.base_mesh,
+            visual_size = self.base_size,
+            collisionbox = self.base_colbox,
+            selectionbox = self.base_selbox
+      })
+
+      -- custom function when child grows up
+      if self.on_grown then
+         self.on_grown(self)
+      else
+         -- jump when fully grown so as not to fall into ground
+         self.object:set_velocity({
+               x = 0,
+               y = self.jump_height,
+               z = 0
+         })
+      end
+   end
+end
 
 -- find two animals of same type and breed if nearby and horny
 function mob_class:breed()
 
-	-- child takes 240 seconds before growing into adult
-	if self.child == true then
-
-		self.hornytimer = self.hornytimer + 1
-
-		if self.hornytimer > 240 then
-
-			self.child = false
-			self.hornytimer = 0
-
-			self.object:set_properties({
-				textures = self.base_texture,
-				mesh = self.base_mesh,
-				visual_size = self.base_size,
-				collisionbox = self.base_colbox,
-				selectionbox = self.base_selbox
-			})
-
-			-- custom function when child grows up
-			if self.on_grown then
-				self.on_grown(self)
-			else
-				-- jump when fully grown so as not to fall into ground
-				self.object:set_velocity({
-					x = 0,
-					y = self.jump_height,
-					z = 0
-				})
-			end
+	if self.child then
+		if self.horny then
+			self.horny = false
 		end
-
 		return
 	end
 
-	-- horny animal can mate for 40 seconds,
-	-- afterwards horny animal cannot mate again for 200 seconds
-	if self.horny == true
-	and self.hornytimer < 240 then
+        if self.horny
+        or os.time(os.date("!*t")) > self.next_breed_time then
 
-		self.hornytimer = self.hornytimer + 1
-
-		if self.hornytimer >= 240 then
-			self.hornytimer = 0
-			self.horny = false
-		end
-	end
-
-	-- find another same animal who is also horny and mate if nearby
-	if self.horny == true
-	and self.hornytimer <= 40 then
+		self.horny = true
 
 		local pos = self.object:get_pos()
 
@@ -1230,19 +1228,20 @@ function mob_class:breed()
 			if ent
 			and canmate == true
 			and ent.horny == true
-			and ent.hornytimer <= 40 then
+			then
 				num = num + 1
 			end
 
 			-- found your mate? then have a baby
 			if num > 1 then
-
-				self.hornytimer = 41
-				ent.hornytimer = 41
+				local timestamp = os.time(os.date("!*t"))
+				self.next_breed_time = timestamp + self.breed_duration
+                                self.horny = false
+				ent.next_breed_time = timestamp + ent.breed_duration
+                                ent.horny = false
 
 				-- spawn baby
 				minetest.after(5, function(self, ent)
-
 					if not self.object:get_luaentity() then
 						return
 					end
@@ -1292,6 +1291,7 @@ function mob_class:breed()
 						},
 					})
 					-- tamed and owned by parents' owner
+					ent2.horny = false
 					ent2.child = true
 					ent2.tamed = true
 					ent2.owner = self.owner
@@ -3038,6 +3038,25 @@ function mob_class:mob_activate(staticdata, def, dtime)
 	self:update_tag()
 	self:set_animation("stand")
 
+        -- custom timers
+        if def.growup_duration ~= self.growup_duration then
+           self.growup_duration = self.growup_duration
+        end
+        if def.breed_duration ~= self.breed_duration then
+           self.breed_duration = def.breed_duration
+        end
+
+        -- log creation and next breed time
+        local time = os.time(os.date("!*t"))
+
+        if not self.creation_time then
+           self.creation_time = time
+        end
+
+        if not self.next_breed_time then
+           self.next_breed_time = time + self.breed_duration
+        end
+
 	-- run on_spawn function if found
 	if self.on_spawn and not self.on_spawn_run then
 		if self.on_spawn(self) then
@@ -3245,6 +3264,8 @@ function mob_class:on_step(dtime)
 	end
 
 	self:general_attack()
+
+        self:grow_up()
 
 	self:breed()
 
@@ -3783,7 +3804,7 @@ end
 -- * spawn_egg=2: Spawn egg (captured/tamed mob, metadata)
 function mobs:register_egg(mob, desc, background, addegg, no_creative)
 
-	local grp = {spawn_egg = 1}
+	local grp = {spawn_egg = 2}
 
 	-- do NOT add this egg to creative inventory (e.g. dungeon master)
 	if creative and no_creative == true then
@@ -4139,24 +4160,13 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 
 		self:update_tag()
 
-		-- make children grow quicker
-		if self.child == true then
-
-			self.hornytimer = self.hornytimer + 20
-
-			return true
-		end
-
+                self:mob_sound(self.sounds.random)
 		-- feed and tame
 		self.food = (self.food or 0) + 1
 
 		if self.food >= feed_count then
 
 			self.food = 0
-
-			if breed and self.hornytimer == 0 then
-				self.horny = true
-			end
 
 			if tame then
 
@@ -4174,7 +4184,7 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 			end
 
 			-- make sound when fed so many times
-			self:mob_sound(self.sounds.random)
+
 		end
 
 		return true
@@ -4183,8 +4193,7 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 	local item = clicker:get_wielded_item()
 
 	-- if mob has been tamed you can name it with a nametag
-	if item:get_name() == "mobs:nametag"
-	and clicker:get_player_name() == self.owner then
+	if item:get_name() == "mobs:nametag" and not self.nametag then
 
 		local name = clicker:get_player_name()
 
