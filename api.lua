@@ -3473,17 +3473,19 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 
 	end
 
-	minetest.register_abm({
+	minetest.register_lbm({
 
-		label = name .. " spawning",
+		name = name.."spawning",
 		nodenames = nodes,
-		neighbors = neighbors,
-		interval = interval,
-		chance = max(1, (chance * mob_chance_multiplier)),
-		catch_up = false,
+		-- neighbors = neighbors,
+		-- interval = interval,
+		-- chance = max(1, (chance * mob_chance_multiplier)),
+                run_at_every_load = true,
 
-		action = function(pos, node, active_object_count, active_object_count_wider)
-
+		action = function(pos, node)
+			if random(chance) ~= chance then
+				return
+			end
 			-- is mob actually registered?
 			if not mobs.spawning_mobs[name]
 			or not minetest.registered_entities[name] then
@@ -3493,12 +3495,6 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 
 			-- additional custom checks for spawning mob
 			if mobs:spawn_abm_check(pos, node, name) == true then
-				return
-			end
-
-			-- do not spawn if too many entities in area
-			if active_object_count_wider >= max_per_block then
---print("--- too many entities in area", active_object_count_wider)
 				return
 			end
 
