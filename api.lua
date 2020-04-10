@@ -3319,8 +3319,8 @@ minetest.register_entity(name, setmetatable({
 	rotate = math.rad(def.rotate or 0), --  0=front, 90=side, 180=back, 270=side2
 	glow = def.glow,
 	lifetimer = def.lifetimer,
-	hp_min = max(1, (def.hp_min or 5) * difficulty),
-	hp_max = max(1, (def.hp_max or 10) * difficulty),
+	hp_min = max(1, (def.hp_min or 5) * difficulty * default.HEALTH_MULTIPLIER),
+	hp_max = max(1, (def.hp_max or 10) * difficulty * default.HEALTH_MULTIPLIER),
 	collisionbox = def.collisionbox,
 	selectionbox = def.selectionbox or def.collisionbox,
 	visual = def.visual,
