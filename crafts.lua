@@ -36,7 +36,7 @@ minetest.register_craftitem("mobs:meat", {
 	description = S("Meat"),
 	inventory_image = "mobs_meat.png",
 	on_use = minetest.item_eat(8),
-	groups = {food_meat = 1, flammable = 2}
+	groups = {food_meat = 1, flammable = 2, food_cooked_meat = 1}
 })
 
 minetest.register_craft({
