@@ -23,6 +23,27 @@ minetest.register_craftitem("mobs:leather", {
 	groups = {flammable = 2}
 })
 
+-- Drops from reptiles.
+minetest.register_craftitem("mobs:lizardskin", {
+	description = S("Lizardskin"),
+	inventory_image = "mobs_lizardskin.png",
+	groups = {flammable = 2}
+})
+
+-- Drops from cattle
+minetest.register_craftitem("mobs:cowhide", {
+	description = S("Cowhide"),
+	inventory_image = "mobs_cowhide.png",
+	groups = {flammable = 2}
+})
+
+-- This will have it texture(color) modified based on the player it drops from
+minetest.register_craftitem("mobs:human_skin", {
+	description = S("Human Skin"),
+	inventory_image = "mobs_cowhide.png",
+	groups = {flammable = 2}
+})
+
 -- raw meat
 minetest.register_craftitem("mobs:meat_raw", {
 	description = S("Raw Meat"),
@@ -179,6 +200,24 @@ minetest.register_craft({
 minetest.register_craft({
 	type = "fuel",
 	recipe = "mobs:leather",
+	burntime = 4
+})
+
+minetest.register_craft({
+	type = "fuel",
+	recipe = "mobs:lizardskin",
+	burntime = 4
+})
+
+minetest.register_craft({
+	type = "fuel",
+	recipe = "mobs:cowhide",
+	burntime = 4
+})
+
+minetest.register_craft({
+	type = "fuel",
+	recipe = "mobs:human_skin",
 	burntime = 4
 })
 
