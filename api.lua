@@ -3932,18 +3932,37 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 				pos.z = pos.z + 0.5
 			end
 
-			local mob = minetest.add_entity(pos, name)
+			minetest.after(
+                           1,
+                           function(pos, name, node)
+                              local nearby = minetest.get_objects_inside_radius(
+                                 pos, 128
+                              )
+                              local nearby_count = #nearby
+                              local spos = minetest.pos_to_string(pos)
+                              if nearby_count > 16 then
+                                 minetest.log(
+                                    "Cancelled spawning " .. name .. " at "
+                                       .. spos .. " (too many entities nearby: "
+                                       .. tostring(nearby_count) .. ")."
+                                 )
+                                 return
+                              end
 
-			minetest.log("[mobs] Spawned " .. name .. " at "
-			.. minetest.pos_to_string(pos) .. " on "
-			.. node.name .. " near " .. neighbors[1])
+                              local mob = minetest.add_entity(pos, name)
+                              minetest.log("[mobs] Spawned " .. name .. " at "
+                                              .. spos .. " on "
+                                              .. node.name .. " near " .. neighbors[1])
 
-			if on_spawn then
+                              if on_spawn then
 
-				local ent = mob:get_luaentity()
+                                 local ent = mob:get_luaentity()
 
-				on_spawn(ent, pos)
-			end
+                                 on_spawn(ent, pos)
+                              end
+                        end, pos, name, node)
+
+
 		end
 	})
 end
