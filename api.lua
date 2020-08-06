@@ -1406,6 +1406,7 @@ function mob_class:breed()
                                         local spos = minetest.pos_to_string(pos)
                                         if nearby_count > 24 then
                                            minetest.log(
+                                              "verbose",
                                               "Cancelled spawning bred " .. name .. " at "
                                                  .. spos .. " (too many entities nearby: "
                                                  .. tostring(nearby_count) .. ")."
