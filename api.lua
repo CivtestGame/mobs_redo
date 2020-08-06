@@ -1397,6 +1397,22 @@ function mob_class:breed()
 						return
 					end
 
+                                        local name = self.name
+
+                                        local nearby = minetest.get_objects_inside_radius(
+                                           pos, 128
+                                        )
+                                        local nearby_count = #nearby
+                                        local spos = minetest.pos_to_string(pos)
+                                        if nearby_count > 24 then
+                                           minetest.log(
+                                              "Cancelled spawning bred " .. name .. " at "
+                                                 .. spos .. " (too many entities nearby: "
+                                                 .. tostring(nearby_count) .. ")."
+                                           )
+                                           return
+                                        end
+
 					-- custom breed function
 					if self.on_breed then
 
