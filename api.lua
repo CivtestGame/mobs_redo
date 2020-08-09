@@ -3204,6 +3204,7 @@ function mob_class:mob_activate(staticdata, def, dtime)
 	self.visual_size = vis_size
 	self.standing_in = "air"
 	self.standing_on = "air"
+        self.damage_texture_modifier = "^[colorize:#ff3c3c:100"
 
 	-- check existing nametag
 	if not self.nametag then
@@ -3729,7 +3730,7 @@ function mobs:add_mob(pos, def)
 				ent.base_selbox[4] * .5,
 				ent.base_selbox[5] * .5,
 				ent.base_selbox[6] * .5
-			},
+			}
 		})
 
 		ent.child = true
